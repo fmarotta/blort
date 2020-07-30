@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <errno.h>
 #include <err.h>
 
@@ -67,6 +68,11 @@ int main(int argc, char *argv[])
         if (setvbuf(out, NULL, _IOFBF, BUFSIZE) != 0)
         {
             err(1, "setvbuf: %s", argv[2]);
+            exit(EXIT_FAILURE);
+        }
+        if (truncate(argv[2], 0))
+        {
+            err(1, "truncate %s", argv[2]);
             exit(EXIT_FAILURE);
         }
     }
