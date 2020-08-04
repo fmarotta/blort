@@ -4,9 +4,9 @@
  * consecutive lines with the same key. Each block of lines with the
  * same key is considered as a single item as far as the sorting is
  * concerned. This can dramatically reduce the number of comparisons, as
- * well as the I/O operations with respect to GNU sort, thereby speeding
- * up the process. The drawback is that it is not possible to sort
- * piped files.
+ * well as the I/O operations, with respect to GNU sort, thereby
+ * speeding up the process. The drawback is that it is not possible to
+ * sort piped files.
  *
  * Compile with blarr.c
  */
@@ -28,6 +28,7 @@ int blockcmp(const void *p1, const void *p2);
 int main(int argc, char *argv[])
 {
     FILE *in, *out;
+    // long size;
     char c;
 
     Array blocks;
@@ -83,6 +84,9 @@ int main(int argc, char *argv[])
     }
 
     InitializeArray(&blocks, 128);
+    // fseek(in, 0L, SEEK_END);
+    // size = ftell(in);
+    // rewind(in);
 
     // Scan the file once from beginning to end; when encountering a new
     // block, add its coordinates (key, start, end) to the blocks array.
@@ -95,21 +99,27 @@ int main(int argc, char *argv[])
 
         if (ArrayIsEmpty(&blocks))
             AddItem(&blocks, key, 0L);
-        else if (strcmp(key, LastKey(&blocks)))
+        else if (strcmp(key, LastKey(&blocks))) {
             AddItem(&blocks, key, ftell(in) - strlen(key));
+            // fprintf(stderr, "\r%.1f%%", (float) ftell(in) / size * 100);
+        }
 
         while ((c = getc(in)) != '\n' & c != EOF) continue;
         if (c == EOF) break;
     }
     SetLastEnd(&blocks, ftell(in));
+    // putc('\n', stderr);
 
     // Sort the array of blocks.
     qsort(blocks.array, blocks.used, sizeof(Block), blockcmp);
 
     // Randomly access the file in the correct order, and print the
     // blocks to the output file.
-    for (int i = 0; i < blocks.used; i++)
+    for (int i = 0; i < blocks.used; i++) {
         append(in, out, blocks.array[i].start, blocks.array[i].end - blocks.array[i].start);
+        // fprintf(stderr, "\r%.1f%%", (float) i / blocks.used * 100);
+    }
+    // putc('\n', stderr);
 
     // Final dispositions.
     FreeArray(&blocks);
@@ -128,10 +138,17 @@ int blockcmp(const void *p1, const void *p2)
 
 void append(FILE *source, FILE*dest, long start, long n)
 {
-    size_t bytes;
-    char block[n];
+    static char block[BUFSIZE];
 
     fseek(source, start, SEEK_SET);
-    bytes = fread(block, n, 1, source);
-    fwrite(block, n, 1, dest);
+    for (int i = 0; i < n / BUFSIZE; i += 1)
+    {
+        fread(block, BUFSIZE, 1, source);
+        fwrite(block, BUFSIZE, 1, dest);
+    }
+    if (n % BUFSIZE > 0)
+    {
+        fread(block, n % BUFSIZE, 1, source);
+        fwrite(block, n % BUFSIZE, 1, dest);
+    }
 }

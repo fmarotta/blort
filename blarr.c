@@ -57,7 +57,8 @@ void AddItem(Array *a, char *key, long start)
 
 void SetLastEnd(Array *a, long end)
 {
-    a->array[a->used - 1].end = end;
+    if (a->used > 0)
+        a->array[a->used - 1].end = end;
 }
 
 void FreeArray(Array *a)
