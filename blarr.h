@@ -2,10 +2,14 @@
 
 #define KEYSIZE 80
 
+// Add large file support
+#define _FILE_OFFSET_BITS 64
+#define _LARGEFILE64_SOURCE 1
+
 typedef struct {
     char key[KEYSIZE];
-    long start;
-    long end;
+    unsigned long long start;
+    unsigned long long end;
 } Block;
 
 typedef struct {
@@ -20,9 +24,9 @@ bool ArrayIsEmpty(Array *a);
 
 char *LastKey(Array *a);
 
-void AddItem(Array *a, char *key, long start);
+void AddItem(Array *a, char *key, unsigned long long start);
 
-void SetLastEnd(Array *a, long end);
+void SetLastEnd(Array *a, unsigned long long end);
 
 // void Traverse(const Array *a, void (*pfun)(Block b));
 

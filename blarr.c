@@ -14,6 +14,10 @@
 
 #include "blarr.h"
 
+// Add large file support
+#define _FILE_OFFSET_BITS 64
+#define _LARGEFILE64_SOURCE 1
+
 void InitializeArray(Array *a, size_t initial_size)
 {
     a->array = (Block*) malloc(initial_size * sizeof(Block));
@@ -27,7 +31,7 @@ void InitializeArray(Array *a, size_t initial_size)
     a->size = initial_size;
 }
 
-void AddItem(Array *a, char *key, long start)
+void AddItem(Array *a, char *key, unsigned long long start)
 {
     Block pnew;
 
@@ -55,7 +59,7 @@ void AddItem(Array *a, char *key, long start)
     a->used++;
 }
 
-void SetLastEnd(Array *a, long end)
+void SetLastEnd(Array *a, unsigned long long end)
 {
     if (a->used > 0)
         a->array[a->used - 1].end = end;

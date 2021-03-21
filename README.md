@@ -47,6 +47,19 @@ NOTE that the blort executable should be either in the working directory
 or in a directory listed in the PATH environmental variable. Otherwise,
 specify the full path to it.
 
+## TODO (notes to self)
+
+* multi-thread reading/writing (e.g. divide the file in two, and use
+  fseek to assign each part to one thread. Also see
+  https://www.codeproject.com/Questions/1251979/Multi-threading-to-read-write-file)
+
+* Support a field different from the first
+
+* Support numeric sorting etc.
+
+* Ignore header
+
 ## Bug reports
 
 federicomarotta AT mail DOT com
+

@@ -20,9 +20,13 @@
 
 #include "blarr.h"
 
-#define BUFSIZE 4096
+#define BUFSIZE 8192ULL
 
-void append(FILE *source, FILE*dest, long start, long n);
+// Add large file support
+#define _FILE_OFFSET_BITS 64
+#define _LARGEFILE64_SOURCE 1
+
+void append(FILE *source, FILE*dest, unsigned long long start, unsigned long long n);
 int blockcmp(const void *p1, const void *p2);
 
 int main(int argc, char *argv[])
@@ -84,8 +88,8 @@ int main(int argc, char *argv[])
     }
 
     InitializeArray(&blocks, 128);
-    // fseek(in, 0L, SEEK_END);
-    // size = ftell(in);
+    // fseeko(in, 0L, SEEK_END);
+    // size = ftello(in);
     // rewind(in);
 
     // Scan the file once from beginning to end; when encountering a new
@@ -97,17 +101,15 @@ int main(int argc, char *argv[])
     {
         fscanf(in, "%80s", key);
 
-        if (ArrayIsEmpty(&blocks))
-            AddItem(&blocks, key, 0L);
-        else if (strcmp(key, LastKey(&blocks))) {
-            AddItem(&blocks, key, ftell(in) - strlen(key));
-            // fprintf(stderr, "\r%.1f%%", (float) ftell(in) / size * 100);
+        if (ArrayIsEmpty(&blocks) || strcmp(key, LastKey(&blocks))) {
+            AddItem(&blocks, key, ftello(in) - (unsigned long long) strlen(key));
+            // fprintf(stderr, "\r%.1f%%", (float) ftello(in) / size * 100);
         }
 
         while ((c = getc(in)) != '\n' & c != EOF) continue;
         if (c == EOF) break;
     }
-    SetLastEnd(&blocks, ftell(in));
+    SetLastEnd(&blocks, ftello(in));
     // putc('\n', stderr);
 
     // Sort the array of blocks.
@@ -125,7 +127,7 @@ int main(int argc, char *argv[])
     FreeArray(&blocks);
     fclose(in);
     fclose(out);
-    return 1;
+    return 0;
 }
 
 int blockcmp(const void *p1, const void *p2)
@@ -136,12 +138,12 @@ int blockcmp(const void *p1, const void *p2)
     return strcmp(a1->key, a2->key);
 }
 
-void append(FILE *source, FILE*dest, long start, long n)
+void append(FILE *source, FILE*dest, unsigned long long start, unsigned long long n)
 {
     static char block[BUFSIZE];
 
-    fseek(source, start, SEEK_SET);
-    for (int i = 0; i < n / BUFSIZE; i += 1)
+    fseeko(source, start, SEEK_SET);
+    for (unsigned long long i = 0ULL; i < n / BUFSIZE; i++)
     {
         fread(block, BUFSIZE, 1, source);
         fwrite(block, BUFSIZE, 1, dest);
